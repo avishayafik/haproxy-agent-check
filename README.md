@@ -1,5 +1,10 @@
 # Haproxy agent check 
 
+
+checkout what is haproxy agent check: 
+https://cbonte.github.io/haproxy-dconv/1.8/configuration.html
+
+
 this project expose tcp connection  in order to cahnge haproxy weight
 
 
