@@ -25,7 +25,11 @@ const (
 	prometheus    = "http://i-was-stg-web1.stapp.me:9090/"
 	//prometheus = "http://prometheus.hosts-app.com:9090/"
 	prometheusURI = "/api/v1/query"
+	low_weight_threshold = 60
+	high_weight_threshold = 120
+
 )
+
 
 
 
@@ -110,6 +114,7 @@ func writeWeightConf(filename string,Weight int64 ) (*conf, error) {
 
 
 func main() {
+
     server := tcp_server.New(":9999")
 ////// get weight from disk
     c, err := readConf("/tmp/conf.yaml")
@@ -141,16 +146,24 @@ func validate_weight() {
 
 
 func weight(last_weight *int)  {
-   rejects_diff()
+
+   hostname, err := os.Hostname()
+   if err != nil {
+            panic(err)
+   }
+
+   prometheus_query := "100-((avg(avg_over_time(node_load1{instance=~'.*"+hostname+".stapp.me.*'}[30d:1h])))/avg(avg_over_time(node_load1{instance=~'.*was-prd-web.*'}[30d:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~'.*"+hostname+".stapp.me',proxy='rtb'}[30d:1h]))"
+
+   rejects_diff(prometheus_query)
    //var cpu_count = float64(runtime.NumCPU())
    for {
    log.Println("weight is : " ,*last_weight)
-   rejects_weight  := rejects_diff()
+   rejects_weight  := rejects_diff(prometheus_query)
    log.Println(rejects_weight)
 
-   if  rejects_weight < 60  {
-         rejects_weight = 60
-   } else if rejects_weight > 120 {
+   if  rejects_weight < low_weight_threshold  {
+         rejects_weight = low_weight_threshold
+   } else if rejects_weight > high_weight_threshold {
          rejects_weight = weight_avg()
    }
 
@@ -169,7 +182,7 @@ func weight(last_weight *int)  {
 
 
 
-func rejects_diff() float64 {
+func rejects_diff(prometheus_query string) float64 {
 	client, err := api.NewClient(api.Config{
 		Address: prometheus,
 	})
@@ -178,10 +191,7 @@ func rejects_diff() float64 {
 		os.Exit(1)
 	}
 
-   hostname, err := os.Hostname()
-   if err != nil {
-            panic(err)
-   }
+
 
 	v1api := v1.NewAPI(client)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -193,8 +203,8 @@ func rejects_diff() float64 {
 	}
     //hostname := "was-prd-web3"
 
-    log.Println("100-((avg(avg_over_time(node_load1{instance=~'.*"+hostname+".stapp.me.*'}[30d:1h])))/avg(avg_over_time(node_load1{instance=~'.*was-prd-web.*'}[30d:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~'.*"+hostname+".stapp.me',proxy='rtb'}[30d:1h]))")
-	result, warnings, err := v1api.QueryRange(ctx, "100-((avg(avg_over_time(node_load1{instance=~'.*"+hostname+".stapp.me.*'}[30d:1h])))/avg(avg_over_time(node_load1{instance=~'.*was-prd-web.*'}[30d:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~'.*"+hostname+".stapp.me',proxy='rtb'}[30d:1h]))" , r)
+    log.Println(prometheus_query)
+	result, warnings, err := v1api.QueryRange(ctx, prometheus_query , r)
 	if err != nil {
 		fmt.Printf("Error querying Prometheus: %v\n", err)
 		os.Exit(1)
