@@ -1,0 +1,6 @@
+---
+- hosts: all
+  roles:
+    - role: haproxy-agent-check 
+  serial: 1
+

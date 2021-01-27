@@ -138,4 +138,4 @@ load_average:
 
 100-((avg(avg_over_time(node_load1{instance=~"server_name.*"}[24h:1h])))/avg(avg_over_time(node_load1{instance=~"<total_servers_prefix>.*"}[24h:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~"<server_name>",proxy="<backend_service>"}[24h:1h]))
 
-```~~~~
+```

@@ -1,0 +1,36 @@
+---
+
+- name: make sure /haproxy_agent/ exist
+  file:
+    path: /haproxy_agent
+    state: directory
+
+- name: copy weight file if not exist
+  template:
+    src: conf.yaml
+    dest: /haproxy_agent/conf.yaml
+    force: no
+
+
+- name: Run Haproxy agent check container
+  docker_container:
+    recreate: yes
+    restart_policy: always
+    pull: true
+    name: haproxy-agent-check
+    image: registry.hosts-app.com/devops/haproxy-agent-check:was-rtbmicroservice-prometheus
+    network_mode: host
+    state: started
+    restart: yes
+    stop_signal: SIGUSR1
+    privileged: yes
+    log_driver: json-file
+    log_options:
+      max-size: 100m
+    volumes:
+      /haproxy_agent/conf.yaml:/tmp/conf.yaml
+    ports:
+     - 9999:9999
+    dns_search_domains:
+     - "stapp.me"
+
