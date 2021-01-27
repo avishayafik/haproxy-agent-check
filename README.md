@@ -1,5 +1,8 @@
 # Haproxy agent check 
 
+## This project aims to who ever runs haproxy on premise , and his hardware backend is not always the same in all backends  
+
+### this project purpose is to make haproxy load equals among all servers based on cpu .
 
 checkout what is haproxy agent check: 
 https://cbonte.github.io/haproxy-dconv/1.8/configuration.html
@@ -137,5 +140,35 @@ this  approcah is more gracefull because it will calc last 24h and will learn ab
 load_average:
 
 100-((avg(avg_over_time(node_load1{instance=~"server_name.*"}[24h:1h])))/avg(avg_over_time(node_load1{instance=~"<total_servers_prefix>.*"}[24h:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~"<server_name>",proxy="<backend_service>"}[24h:1h]))
+
+```
+this code assume the below 
+
+ 
+* need to be running on backend machine , or in pod if using haproxy ingress controler 
+
+* need prometheus server who expose node exporter metrics on all backend machines .
+
+* need to use haproxy 2.1 or higher and monitor it with haproxy exporter , who being exposed with edded in haproxy  
+
+to configure code just change the following  and build docker images:
+
+```
+const (
+	prometheus    = "http://i-was-stg-web1.stapp.me:9090/"
+	prometheusURI = "/api/v1/query"
+    // low weight precentage
+	low_weight_threshold = 60
+    // high weight precentage
+	high_weight_threshold = 120
+
+)
+
+
+// prometheus query , this query compares between server cpu load  , to total backend servers in the cluster  
+
+prometheus_query := "100-((avg(avg_over_time(node_load1{instance=~'.*"+hostname+".stapp.me.*'}[30d:1h])))/avg(avg_over_time(node_load1{instance=~'.*was-prd-web.*'}[30d:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~'.*"+hostname+".stapp.me',proxy='rtb'}[30d:1h]))"
+
+
 
 ```
