@@ -127,13 +127,10 @@ query compares server and rejects to all cluster and base on that decide what sh
 this  approcah is more gracefull because it will calc last 24h and will learn about it .
 
 ```
-rejects :
-
-100 + (1-(sum(rate(requests_rejects_total{startapp_service_name=~"rtbmicroservice",instance=~"was-prd-web1.stapp.me:8428"}[24h])))/(sum(rate(requests_rejects_total{startapp_service_name=~"rtbmicroservice",instance=~"was.*"}[24h]))/100)) *avg(avg_over_time(haproxy_server_weight{server=~"was-prd-web1.stapp.me",proxy="rtb"}[24h:1h]))
 
 
 load_average:
 
-100-((avg(avg_over_time(node_load1{instance=~"was-prd-web54.stapp.me.*"}[24h:1h])))/avg(avg_over_time(node_load1{instance=~"was-prd-web.*"}[24h:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~"was-prd-web54.stapp.me",proxy="rtb"}[24h:1h]))
+100-((avg(avg_over_time(node_load1{instance=~"server_name.*"}[24h:1h])))/avg(avg_over_time(node_load1{instance=~"<total_servers_prefix>.*"}[24h:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~"<server_name>",proxy="<backend_service>"}[24h:1h]))
 
 ```~~~~
