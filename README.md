@@ -169,6 +169,12 @@ const (
 
 prometheus_query := "100-((avg(avg_over_time(node_load1{instance=~'.*"+hostname+".stapp.me.*'}[30d:1h])))/avg(avg_over_time(node_load1{instance=~'.*was-prd-web.*'}[30d:1h]))-1)*avg(avg_over_time(haproxy_server_weight{server=~'.*"+hostname+".stapp.me',proxy='rtb'}[30d:1h]))"
 
+```
+
+haproxy backend config example:
+
+```
+server host.example.com host.example.com:<port> weight 100 check maxqueue 1 maxconn 20000 slowstart 90s agent-check agent-inter 60s agent-addr host.example.com agent-port 9999
 
 
 ```
