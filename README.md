@@ -155,7 +155,7 @@ to configure code just change the following  and build docker images:
 
 ```
 const (
-	prometheus    = "http://i-was-stg-web1.stapp.me:9090/"
+	prometheus    = "http://example-prometheus:9090/"
 	prometheusURI = "/api/v1/query"
     // low weight precentage
 	low_weight_threshold = 60
